@@ -1,0 +1,15 @@
+{
+  "name": "filipportc",
+  "dependencies": {
+    "express": "^4.17.1",
+    "simple-peer": "^9.9.3",
+    "sqlite3": "^5.0.2",
+    "bcrypt": "^5.0.1",
+    "socket.io": "^3.0",
+    "httpolyglot": "^0.1.2"
+  },
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "node server/app.js"
+  }
+}
