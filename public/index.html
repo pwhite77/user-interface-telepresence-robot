@@ -1,0 +1,440 @@
+
+<!DOCTYPE html>
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, user-scalable=no, initial-scale=1, maximum-scale=1">
+
+    <title>Filippo Bianco</title>
+
+    <script lang="text/javascript" src="/socket.io/socket.io.js" defer></script>
+    <script src="/simple-peer/simplepeer.min.js" defer></script>
+
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.0-beta2/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-BmbxuPwQa2lc/FVzBcNJ7UAyJxM6wuqIj61tLrc4wSX0szH/Ev+nYRRuWlolflfl" crossorigin="anonymous">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.4.0/font/bootstrap-icons.css">
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.0-beta2/dist/js/bootstrap.bundle.min.js" integrity="sha384-b5kHyXgcpbZJO/tY9Ul7kGkf1S0CWuKcCD38l8YkeH8z8QjE0GmW1gYU5S9FOnJ0" crossorigin="anonymous" defer></script>
+
+    <script type="text/javascript" src="https://static.robotwebtools.org/EventEmitter2/current/eventemitter2.min.js" defer></script>
+    <script type="text/javascript" src="https://static.robotwebtools.org/roslibjs/current/roslib.min.js" defer></script>
+
+    <style>
+        body, input, button {
+            font-family: sans-serif !important;
+            font-weight: 100 !important;
+        }
+
+        .miniature {
+            height: 100px;
+        }
+
+        .page {
+            width: 100%;
+            height: 100%;
+            height: -webkit-fill-available;
+            height: -moz-available;
+            display: none;
+        }
+
+        @media only screen and (max-width: 600px) {
+            .center {
+                padding: 10px;
+            }
+        }
+
+        @media (min-width: 601px) {
+            .center {
+                position: absolute;
+                top: 50%;
+                left: 50%;
+                transform: translate(-50%, -50%);
+            }
+        }
+
+        input, select {
+            margin-bottom: 10px;
+        }
+
+        #controls {
+            padding: 10px;
+            background-color: rgba(0, 0, 0, 0.5);
+            position: absolute;
+            bottom: 15px;
+            left: 15px;
+            border-radius: 10px;
+            z-index: 400000;
+        }
+
+        #controls button {
+            font-size: 25px !important;
+        }
+
+        #chatMessages {
+            width: 100%;
+            overflow-y: scroll;
+        }
+
+        .message {
+            background-color: #FAFAFA;
+            max-width: 50%;
+            word-wrap: break-word;
+            padding: 10px;
+            border-radius: 10px;
+            margin-bottom: 10px;
+        }
+
+        .message p {
+            width: 100%;
+        }
+
+        .sent {
+            background-color: #E5FFFF !important;
+        }
+
+        .message h1 {
+            font-size: 12px;
+            color: gray;
+        }
+
+        .message h2 {
+            color: black;
+            font-size: 15px;
+        }
+
+        .message h3 {
+            text-align: right;
+            font-size: 10px;
+            color: gray;
+        }
+
+        #messageNotification {
+            display: none;
+            position: absolute;
+            top: 25px;
+            right: 25px;
+            box-shadow: 10px 10px 5px grey;
+            border-radius: 10px;
+            background-color: #E5FFFF;
+            padding: 10px;
+        }
+
+        #messageNotification h1 {
+            color: gray;
+            font-size: 12px;
+        }
+
+        #messageNotification h2 {
+            color: black;
+            font-size: 15px;
+        }
+
+        .robot-mov-btns {
+            width: 100%;
+            text-align: center;
+            position: absolute;
+            left: 0;
+            display: none;
+            z-index: 6000;
+        }
+
+        .robot-mov-btns-side {
+            position: absolute;
+            z-index: 6000;
+            display: none;
+        }
+
+        #chatModal {
+            z-index: 7000;
+        }
+
+
+        #main-container {
+            width: 100%;
+            height: 100%;
+            height: -webkit-fill-available; /*Safari*/
+            height: -moz-available;
+        }
+
+        #videos-cell {
+            overflow-x: scroll;
+            height: 150px;
+        }
+
+        #connected-users {
+            margin: auto;
+        }
+
+        #connected-users tr td {
+            text-align: center;
+        }
+
+        #connected-users tr td p {
+            margin: 0;
+        }
+
+        #main-video-cell {
+            text-align: center;
+        }
+    </style>
+
+</head>
+
+<body>
+
+    <div id="page-0" class="page" style="display:block">
+        <div class="center">
+            <h1>Login</h1>
+            <input type="text" name="userName" id="userName" placeholder="Username" class="form-control" autofocus required>
+            <input type="password" name="userPassword" id="userPassword" placeholder="Password" class="form-control" required>
+            <button id="login" type="button" class="btn btn-lg btn-info">Login</button>
+            <br><br>
+            <p style="margin-bottom:2px;">Quale algoritmo di Pose Estimation vuoi attivare?<br>Premi sul relativo link:</p>
+            <a href="/?mp">MediaPipe</a>&nbsp;oppure&nbsp;<a href="/">PoseNet</a>
+            <p id="alg">Hai scelto PoseNet</p>
+            <script type="text/javascript">
+                if (window.location.search === "?mp") {
+                    $("#alg").text("Hai scelto MediaPipe");
+                } else {
+                    $("#alg").text("Hai scelto PoseNet");
+                }
+            </script>
+            <span>Prima di procedere per la prima volta, leggi le<br></span>
+            <button type="button" class="btn btn-info btn-sm" data-bs-toggle="modal" data-bs-target="#exampleModal">
+                Informazioni sulla pose estimation
+            </button>
+
+            <p>
+                <a class="btn btn-info btn-sm" data-bs-toggle="collapse" href="#robotConfig" role="button" aria-expanded="false" aria-controls="robotConfig" style="margin-top: 10px;">
+                    Configurazioni per robot
+                </a>
+            </p>
+            <div class="collapse" id="robotConfig">
+                <div class="card card-body">
+                    <input type="text" class="form-control" id="topicName" value="/xtion/rgb/image_raw" placeholder="Topic per le immagini COMPRESSE!">
+                    <input type="text" class="form-control" id="commandsServerUrl" value="wss://tiago-87c:8080" placeholder="WS avviato da rosbridge">
+                    <input type="text" class="form-control" id="movementTopic" value="" placeholder="Topic per movimenti">
+                    <input type="number" class="form-control" id="maxSpeed" value="0.5" placeholder="Vel. massima">
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal fade" id="exampleModal" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="exampleModalLabel">Informazioni sulla pose estimation</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    Sono disponibili due algoritmi diversi per la pose estimation.
+                    Gli algoritmi vengono eseguiti unicamente dall'account del robot, e i relativi dati vengono raccolti solo sull'account del robot.
+                    Eventualmente, essi possono essere trasmessi in modo testuale agli altri peer (al momento non è prevista questa possibilità).
+                    Per attivare l'algoritmo scelto di pose estimation, dal robot, cliccare sul proprio video e <u>attendere qualche secondo</u>.
+                    Quando appariranno a video i giunti, allora l'algoritmo sarà correttamente avviato. Nel mentre, evitare ulteriori azioni.
+                    In futuro, quando i giunti a video non saranno più necessari, sarà possibile attivare la pose estimation da un peer esterno (dunque non il robot).
+                    Al momento, non è possibile cambiare algoritmo di pose estimation DOPO aver effettuato il login.
+                    Per cambiarlo, ricaricare la pagina o premere il bottone HANGUP (rosso).
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="page-1" class="page">
+        <div class="center">
+            <h1>Room selection</h1>
+            <input type="text" name="roomName" id="roomName" placeholder="Room Name" class="form-control" autofocus required>
+            <input type="password" name="roomPassword" id="roomPassword" placeholder="Room Password" class="form-control" required>
+            <button id="makeOrJoinRoom" type="button" class="btn btn-lg btn-info">Procedi</button>
+        </div>
+    </div>
+
+    <div id="page-2" class="page">
+        <!-- Videos gallery -->
+        <table id="main-container">
+            <tr id="videos-row">
+                <td id="videos-cell">
+
+                    <table id="connected-users">
+                        <tr id="connected-users-row">
+                            <td>
+                                <p>You</p>
+                                <video id="localVideo" class="miniature" autoplay muted playsinline></video>
+                            </td>
+                            <td id="robotStreamContainer">
+                                <p>Robot Stream</p>
+                                <img id="robotStream" onclick="openRobotVideo()" class="miniature" style="background-color: black; width:150px;" crossorigin="anonymous">
+                            </td>
+                        </tr>
+                    </table>
+
+                </td>
+            </tr>
+            <tr id="main-video-row">
+                <td id="main-video-cell">
+
+                </td>
+            </tr>
+        </table>
+
+        <!-- Controls buttons -->
+        <div id="controls">
+            <button id="toggleMuteButton" onclick="toggle(true)" class="btn btn-info">
+                <i class="bi bi-mic-fill"></i>
+            </button>
+            <button id="hangupButton" onclick="hangup()" class="btn btn-danger">
+                <i class="bi bi-telephone-x-fill"></i>
+            </button>
+            <div class="btn-group dropup">
+                <button type="button" class="btn btn-info" id="toggleVideoButton" onclick="toggle(false)">
+                    <i class="bi bi-camera-video-off-fill"></i>
+                </button>
+                <button type="button" class="btn btn-info dropdown-toggle dropdown-toggle-split" data-bs-toggle="dropdown" aria-expanded="false">
+                    <span class="visually-hidden">Toggle Dropdown</span>
+                </button>
+                <ul class="dropdown-menu">
+                    <li><a class="dropdown-item" data-bs-toggle="modal" data-bs-target="#cameraSwitchModal" href="#">Switch camera</a></li>
+                </ul>
+            </div>
+
+            <button class="btn btn-info" data-bs-toggle="modal" data-bs-target="#chatModal">
+                <i class="bi bi-chat-fill"></i>
+            </button>
+            <button class="btn btn-info" id="restoreSmallerBtn" style="display: none;" onclick="restoreSmaller()">
+                <i class="bi bi-arrows-angle-contract"></i>
+            </button>
+            <button class="btn btn-info" id="startPoseEstimation" onclick="initializePoseEstimation()">
+                <i class="bi bi-bounding-box"></i>
+            </button>
+        </div>
+
+        <!-- Chat modal -->
+        <div class="modal fade" id="chatModal" tabindex="-1" aria-hidden="true">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title">Chat</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body">
+                        <div id="chatMessages">
+
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <div class="input-group mb-3">
+                            <input type="text" class="form-control" placeholder="Message" id="message">
+                            <button class="btn btn-info" type="button" id="sendButton">Send</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Message notification -->
+        <div id="messageNotification">
+            <h1 id="messageNotificationTitle">New message from </h1>
+            <h2 id="messageNotificationBody"></h2>
+        </div>
+
+        <!-- Camera switch modal -->
+        <div class="modal fade" id="cameraSwitchModal" tabindex="-1">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title">Switch camera</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body" id="cameraSwitchModalBody">
+                        <select id="cameras" class="form-control"></select>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Chiudi</button>
+                        <button type="button" class="btn btn-info" onclick="changeCamera($('#cameras').val())">Switch camera</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div id="robot_video_stream"></div>
+
+    </div>
+
+    <div id="button-up" class="robot-mov-btns" style="top: 150px;">
+        <button id="move-forward" type="button" class="btn btn-lg btn-info">
+            <i class="bi bi-arrow-up"></i><br>Avanti
+        </button>
+    </div>
+
+    <div id="button-down" class="robot-mov-btns" style="bottom: 20px;">
+        <button id="move-back" type="button" class="btn btn-lg btn-info">
+            <i class="bi bi-arrow-down"></i><br>Indietro
+        </button>
+    </div>
+
+    <div id="button-left" class="robot-mov-btns-side">
+        <button id="move-left" type="button" class="btn btn-lg btn-info">
+            <i class="bi bi-arrow-left"></i><br>Sinistra
+        </button>
+    </div>
+
+    <div id="button-right" class="robot-mov-btns-side">
+        <button id="move-right" type="button" class="btn btn-lg btn-info">
+            <i class="bi bi-arrow-right"></i><br>Destra
+        </button>
+    </div>
+
+    <div id="speedSlider" style="display: none; position: absolute; right: 0; top: 0; width: 200px;">
+        <label for="speedVal">Velocità di movimento:</label>
+        <input type="range" class="form-range" min="0" max="100" step="0.5" id="speedVal">
+    </div>
+
+    <canvas id="output" style="position: absolute; top: 150px; z-index: 20000; width: 100px; height: 200px; left: 100px;"></canvas>
+
+    <!-- PoseNet scripts -->
+    <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs" defer></script>
+    <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/@tensorflow-models/posenet" defer></script>
+    <!-- End of PoseNet scripts -->
+
+    <!-- MediaPipe scripts -->
+    <!--<script src="https://cdn.jsdelivr.net/npm/@mediapipe/drawing_utils/drawing_utils.js" crossorigin="anonymous" defer></script>
+    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/pose/pose.js" crossorigin="anonymous" defer></script>-->
+    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/holistic/holistic.js" crossorigin="anonymous"></script>
+    <!-- End of MediaPipe scripts -->
+
+    <script type="text/javascript" src="js/robot-moves.js" id="robot-movements" defer></script>
+
+    <script type="text/javascript" src="js/pose-estimation.js" defer></script>
+
+    <script type="text/javascript">
+        let socket;
+
+        let localStream = null;
+
+        let peers = {};
+
+        const configuration = {
+            "iceServers": [{
+                "urls": "stun:stun.l.google.com:19302?transport=udp"
+            }]
+        }
+
+        let rosBridge = null;
+        let imageListener = null;
+
+        let roomName, roomPassword, userName, userRole;   // 0 = admin/robot controller, 1 = robot, 2 = guest
+
+    </script>
+
+    <canvas id="mediaStreamUnavailableCanvas" style="width: 300px; height: 150px; background-color: red;display: none;"></canvas>
+
+    <script type="text/javascript" src="js/visual-helpers.js" id="visual" defer></script>
+
+    <script type="text/javascript" src='/js/main.js' id="logic"></script>
+
+    <script type="text/javascript" src="js/pages.js" id="pagination"></script>
+
+</body>
