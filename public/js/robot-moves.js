@@ -1,47 +1,3 @@
-
-if (userRole === 1) {
-    var movementManager = new ROSLIB.Topic({
-        ros: rosBridge,
-        name: movementTopic,
-        messageType: 'geometry_msgs/Twist'
-    });
-
-    socket.on("robot_movement_command", function (data) {
-        if (data.roomName !== roomName) {
-            return;
-        }
-        let lX, lY, lZ, aX, aY, aZ;
-        if (data.type == "move-forward") {
-            lX = parseFloat(data.entity);
-            lY = lZ = aX = aY = aZ = 0;
-        } else if (data.type == "move-back") {
-            lX = -parseFloat(data.entity);
-            lY = lZ = aX = aY = aZ = 0;
-        } else if (data.type == "move-left") {
-            aZ = parseFloat(data.entity);
-            lX = lY = lZ = aX = aY = 0;
-        } else if (data.type == "move-right") {
-            aZ = -parseFloat(data.entity);
-            lX = lY = lZ = aX = aY = 0;
-        } else {
-            lX = lY = lZ = aX = aY = aZ = 0;
-        }
-        var move = new ROSLIB.Message({
-            linear: {
-                x: lX,
-                y: lY,
-                z: lZ
-            },
-            angular: {
-                x: aX,
-                y: aY,
-                z: aZ
-            }
-        });
-        movementManager.publish(move);
-    });
-}
-
 let robotMoving = false;
 
 $("#move-forward, #move-back, #move-left, #move-right").click(function() {
@@ -60,7 +16,6 @@ $("#move-forward, #move-back, #move-left, #move-right").click(function() {
         entity: entity,
         timestamp: Date.now()
     };
-    console.log(message);
     socket.emit("robot_movement_command", message);
     robotMoving = !robotMoving;
     resetButtons();
