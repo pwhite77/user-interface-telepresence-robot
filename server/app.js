@@ -7,9 +7,9 @@ const express = require('express');
 const server = express();
 
 const credentials = {
-    // Certificate keys are not publicly exposed in this repository.
-    key: "...",
-    cert: "..."
+    // Credenziali ommesse nella repository.
+    key: "-----BEGIN PRIVATE KEY-----",
+    cert: "-----BEGIN CERTIFICATE-----"
 }
 
 // Database
@@ -82,9 +82,6 @@ server.post("/api/room", function(req, res) {
 });
 
 server.post("/api/login", function(req, res) {
-    // TODO per rendere effettiva l'autenticazione, rimuovere la riga successiva a questa
-    //res.send({"success": true, "username": req.body.username, "role": 0});
-    //return;
     let username = req.body.username;
     db.get("SELECT * FROM `users` WHERE `username`=?", [username], function(e, row) {
         if (row) {
@@ -188,5 +185,5 @@ io.on('connect', (socket) => {
 });
 
 httpsServer.listen(process.env.PORT, () => {
-    console.log(`Server listening. Port ${process.env.PORT}`);
-})
+    console.log(`Started on port: ${process.env.PORT}`);
+});
