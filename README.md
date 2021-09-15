@@ -15,3 +15,5 @@ Per avviare l'app nel computer connesso al robot:
 5. prima di effettuare l'accesso, compilare i campi relativi al topic delle immagini compresse, al topic dei comandi di velocità e all'indirizzo del WebSocket server locale aperto da rosbridge (tipicamente ws://0.0.0.0:9090, lo si può trovare nella console in seguito al lancio di rosbridge_suite).
 
 **NB:** nel web-browser del computer connesso al robot è necessario disabilitare la web-security: [Firefox](https://support.mozilla.org/en-US/kb/mixed-content-blocking-firefox#w_unblock-mixed-content), [Chrome](https://support.google.com/chrome/answer/114662?hl=en&co=GENIE.Platform=Desktop#zippy=%2Cpermissions-that-can-be-changed).
+
+![Demo dell'interfaccia utente](https://github.com/pwhite77/user-interface-telepresence-robot/raw/main/move.png)
