@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <head>
     <meta charset="utf-8">
@@ -210,9 +209,9 @@
             </p>
             <div class="collapse" id="robotConfig">
                 <div class="card card-body">
-                    <input type="text" class="form-control" id="topicName" value="/xtion/rgb/image_raw" placeholder="Topic per le immagini COMPRESSE!">
-                    <input type="text" class="form-control" id="commandsServerUrl" value="wss://tiago-87c:8080" placeholder="WS avviato da rosbridge">
-                    <input type="text" class="form-control" id="movementTopic" value="" placeholder="Topic per movimenti">
+                    <input type="text" class="form-control" id="topicName" value="/xtion/rgb/image_raw/compressed" placeholder="Topic per le immagini COMPRESSE!">
+                    <input type="text" class="form-control" id="commandsServerUrl" value="ws://0.0.0.0:9090" placeholder="WS avviato da rosbridge">
+                    <input type="text" class="form-control" id="movementTopic" value="/joy_vel" placeholder="Topic per movimenti">
                     <input type="number" class="form-control" id="maxSpeed" value="0.5" placeholder="Vel. massima">
                 </div>
             </div>
@@ -400,12 +399,8 @@
     <!-- End of PoseNet scripts -->
 
     <!-- MediaPipe scripts -->
-    <!--<script src="https://cdn.jsdelivr.net/npm/@mediapipe/drawing_utils/drawing_utils.js" crossorigin="anonymous" defer></script>
-    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/pose/pose.js" crossorigin="anonymous" defer></script>-->
     <script src="https://cdn.jsdelivr.net/npm/@mediapipe/holistic/holistic.js" crossorigin="anonymous"></script>
     <!-- End of MediaPipe scripts -->
-
-    <script type="text/javascript" src="js/robot-moves.js" id="robot-movements" defer></script>
 
     <script type="text/javascript" src="js/pose-estimation.js" defer></script>
 
@@ -424,9 +419,10 @@
 
         let rosBridge = null;
         let imageListener = null;
+        let movementManager = null;
+        let movementData = null;
 
         let roomName, roomPassword, userName, userRole;   // 0 = admin/robot controller, 1 = robot, 2 = guest
-
     </script>
 
     <canvas id="mediaStreamUnavailableCanvas" style="width: 300px; height: 150px; background-color: red;display: none;"></canvas>
@@ -434,6 +430,8 @@
     <script type="text/javascript" src="js/visual-helpers.js" id="visual" defer></script>
 
     <script type="text/javascript" src='/js/main.js' id="logic"></script>
+
+    <script type="text/javascript" src="js/robot-moves.js" id="robot-movements" defer></script>
 
     <script type="text/javascript" src="js/pages.js" id="pagination"></script>
 
