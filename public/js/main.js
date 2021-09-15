@@ -6,25 +6,10 @@ async function getConnectedVideoDevices() {
 
 function startLocalVideo() {
     if (userRole === 1) {
-        /*
-
-        FLOW ALTERNATIVO (poiché image_to_v4l2loopback non funziona):
-        Se sono il robot:
-            1) inizializzo rosBridge, ovvero la connessione con roslibjs
-            2) mi abbono al topic dove il robot pubblica le immagini (il topic deve essere COMPRESSED)
-            3) quando ricevo un'immagine dal robot, emetto agli altri peer connessi nella stanza un messaggio di tipo "robot_image"
-            4) carico, nell'immagine con id "robotStream", l'immagine ricevuta nel topic
-            5) quando gli altri peer ricevono un messaggio socket di tipo "robot_image", caricano nell'immagine con id "robotStream" l'immagine ricevuta tramite socket.
-
-            Problema1: non essendo robotStream un elemento di tipo video, bisogna adattare "openBigger" e "restoreSmaller"
-            Problema2: bisogna adattare il codice di PoseNet e MediaPipe per lavorare con immagine invece che con video.
-            Problema3: se sono il robot, devo connettermi anche con l'audio oltre che con il video.
-
-         */
         // Attivo l'audio
         let constraints = {
             "audio": true,
-            "video": false
+            "video": true
         }
         navigator.mediaDevices.getUserMedia(constraints).then(async stream => {
 
@@ -37,8 +22,10 @@ function startLocalVideo() {
 
         }).catch(async function(e) {
             // Se non c'è alcuna device disponibile, ignora l'audio.
-
-            localStream = document.getElementById("mediaStreamUnavailableCanvas").captureStream();
+            console.log(e);
+            alert("Impossibile trovare audio");
+            //localStream = document.getElementById("mediaStreamUnavailableCanvas").captureStream();
+            localStream = null;
             document.querySelector("#localVideo").srcObject = localStream;
 
             await initializeSocketConnection();
@@ -95,6 +82,22 @@ function initializeRobotConnection() {
         name: $("#topicName").val(),
         messageType: "sensor_msgs/CompressedImage"
     });
+
+    movementManager = new ROSLIB.Topic({
+        ros: rosBridge,
+        name: $("#movementTopic").val(),
+        messageType: 'geometry_msgs/Twist'
+    });
+
+    socket.on("robot_movement_command", function (data) {
+        if (data.roomName !== roomName) {
+            return;
+        }
+        movementData = data;
+    });
+
+    setInterval(moveRobot, 20);
+
     // Quando ricevo un'immagine...
     imageListener.subscribe(function(message) {
         // Rigiro agli altri peer
@@ -107,6 +110,40 @@ function initializeRobotConnection() {
         }
         document.getElementById("robotStream").src = "data:image/jpg;base64," + message.data;
     });
+}
+
+function moveRobot() {
+    if (movementData === null) {
+        return;
+    }
+    if (movementData.type == "move-forward") {
+        lX = parseFloat(movementData.entity);
+        lY = lZ = aX = aY = aZ = 0;
+    } else if (movementData.type == "move-back") {
+        lX = -parseFloat(movementData.entity);
+        lY = lZ = aX = aY = aZ = 0;
+    } else if (movementData.type == "move-left") {
+        aZ = parseFloat(movementData.entity);
+        lX = lY = lZ = aX = aY = 0;
+    } else if (movementData.type == "move-right") {
+        aZ = -parseFloat(movementData.entity);
+        lX = lY = lZ = aX = aY = 0;
+    } else {
+        lX = lY = lZ = aX = aY = aZ = 0;
+    }
+    var move = new ROSLIB.Message({
+        linear: {
+            x: lX,
+            y: lY,
+            z: lZ
+        },
+        angular: {
+            x: aX,
+            y: aY,
+            z: aZ
+        }
+    });
+    movementManager.publish(move);
 }
 
 async function initializeSocketConnection() {
@@ -149,9 +186,9 @@ async function initializeSocketConnection() {
 
     socket.on("disconnect", function() {
         for (let socketID in peers) {
-            if (peers[socketID].handshake.query.roomName !== roomName) {
+            /*if (peers[socketID].handshake.query.roomName !== roomName) {
                 continue;
-            }
+            }*/
             kickout(socketID);
         }
     });
@@ -166,7 +203,6 @@ async function initializeSocketConnection() {
     socket.on("message", data => {
        if (data.roomName !== roomName) {
            // Questo messaggio non è per questa room.
-           // TODO verificare necessità di questo controllo perchè un controllo simile viene fatto anche server-side.
            return;
        }
        console.log("Message received");
@@ -176,7 +212,6 @@ async function initializeSocketConnection() {
     socket.on("robot_image", data => {
         if (data.roomName !== roomName) {
             // Questo messaggio non è per questa room.
-            // TODO verificare necessità di questo controllo perchè un controllo simile viene fatto anche server-side.
             return;
         }
         document.getElementById("robotStream").src = "data:image/jpg;base64," + data.image;
@@ -474,7 +509,7 @@ function restoreSmaller() {
 
 function changeCamera(newDeviceId) {
     let constraints = {
-        "audio": false, //TODO activate audio
+        "audio": true,
         "video": {
             "deviceId": newDeviceId
         }
