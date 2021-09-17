@@ -19,4 +19,15 @@ Per avviare l'app nel computer connesso al robot:
 
 **NB:** nel web-browser del computer connesso al robot è necessario disabilitare la web-security: [Firefox](https://support.mozilla.org/en-US/kb/mixed-content-blocking-firefox#w_unblock-mixed-content), [Chrome](https://support.google.com/chrome/answer/114662?hl=en&co=GENIE.Platform=Desktop#zippy=%2Cpermissions-that-can-be-changed).
 
+## Descrizione componenti
+
+Nella cartella `server` è possibile trovare il file `app.js` che rappresenta il backend (scritto in Node.js) dell'applicazione.
+All'interno della cartella `public` è invece possibile trovare le componenti di frontend:
+1. `index.html` è la pagina principale, che contiene il markup HTML dell'interfaccia e include i vari file JavaScript che ne determinano il funzionamento. Tutti questi file sono organizzati all'interno della sottocartella `js`;
+2. `main.js` contiene le funzionalità per la componente di videoconferencing, per la connessione al robot, per la gestione del movimento del robot, per la chat e per la connessione al WebSocket server;
+3. `pages.js` contiene le funzionalità necessarie alla realizzazione della paginazione dell'interfaccia (durante il processo di login e di scelta della room);
+4. `pose-estimation.js` contiene l'integrazione delle due librerie di pose estimation, PoseNet e MediaPipe;
+5. `robot-moves.js` contiene le funzionalità per gestire graficamente l'interfaccia di comando dei movimenti del robot;
+6. `visual-helpers.js` contiene delle funzionalità utili a gestire l'aspetto grafico dell'interfaccia.
+
 ![Demo dell'interfaccia utente](https://github.com/pwhite77/user-interface-telepresence-robot/raw/main/move.png)
