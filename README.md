@@ -7,6 +7,9 @@ Per avviare il server:
 ```
 node server/app.js
 ```
+
+**NB:** per la [Demo dell'interfaccia](https://filipportc.herokuapp.com) è stato scelto come ambiente server Heroku. Per caricare l'applicazione su Heroku è sufficiente collegare il proprio account Heroku con l'account Github. Il deploy sarà effettuato in automatico, in base alle istruzioni specificate nel file `package.json`
+
 Per avviare l'app nel computer connesso al robot:
 1. nel computer connesso al robot, installare il pacchetto ROS rosbridge_suite: `sudo apt-get install ros-<rosdistro>-rosbridge-server`
 2. una volta installato, porlo nella path di sistema: `source /opt/ros/<rosdistro>/setup.bash`
